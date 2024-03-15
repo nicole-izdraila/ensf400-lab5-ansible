@@ -50,6 +50,7 @@
     when: "forever_list.stdout.find('/node-app/app.js') == -1"
 
 #assignment2
+
 - name: Play - Install and configure Nginx as a LoadBalancer
   hosts: localhost
   become: yes
@@ -73,7 +74,7 @@
       # TODO
       file:
         src: /etc/nginx/sites-available/nginx.conf
-        dest: /etc/nginx/sites-enabled/default
+        dest: /etc/nginx/sites-enabled/default:1
         state: link
       
     - name: Restart nginx to apply changes
