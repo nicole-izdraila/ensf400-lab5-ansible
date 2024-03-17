@@ -37,3 +37,16 @@ services:
     ports:
       - "3002:3000"
       - "2225:2225"
+
+  nginx-load-balancer:
+    image: nginx:alpine
+    environment:
+      - SSH_ENABLE_ROOT=true
+    ports:
+      - "2226:22"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - managedhost-app-1
+      - managedhost-app-2
+      - managedhost-app-3

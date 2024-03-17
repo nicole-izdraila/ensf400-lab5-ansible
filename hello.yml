@@ -83,3 +83,30 @@
         name: nginx
         state: restarted
 
+- name: Play - Install and configure Nginx as a LoadBalancer on localhost
+  hosts: load-balancer
+  become: yes
+  tasks:
+    - name: Update cache (for Debian/Ubuntu)
+      apt: update_cache=yes
+      when: ansible_os_family == "Debian"
+    - name: Install Nginx (for Debian/Ubuntu)
+      apt:
+        name: nginx
+        state: latest
+      when: ansible_os_family == "Debian"
+    - name: Ensure Nginx is started (for Debian/Ubuntu)
+      service:
+        name: nginx
+        state: started
+      when: ansible_os_family == "Debian"
+    - name: Copy the Nginx config file to /etc/nginx/nginx.conf
+      copy:
+        src: ./nginx.conf
+        dest: /etc/nginx/nginx.conf
+      notify: restart nginx
+  handlers:
+    - name: restart nginx
+      service:
+        name: nginx
+        state: restarted
