@@ -1,6 +1,6 @@
 # First Play
 - name: Play - Handle Files in all hosts
-  hosts: all
+  hosts: app_group
   tasks:
   - name: all host are identified with a file
     copy:
@@ -56,57 +56,103 @@
   become: yes
   tasks:
     - name: Update cache
-      apt: update_cache=yes   
+      apt:
+        update_cache: yes
+      become: yes
+
     - name: Install Nginx
       apt:
         name: nginx
         state: latest
-    - name: Start Nginx
-      service:
-        name: nginx
-        state: started        
+      become: yes
+
+    
+
     - name: Copy the Nginx config file to /etc/nginx/sites-available
       copy:
         src: ./nginx.conf
-        dest: /etc/nginx/sites-available/nginx.conf
-      
-    - name: Create symlink of the config file at /etc/nginx/sites-enabled
-      # TODO
+        dest: /etc/nginx/sites-available
+      become: yes
+
+    - name: Disable default Nginx site
+      file:
+        path: /etc/nginx/sites-enabled/default
+        state: absent
+      notify: Reload Nginx
+      become: yes
+
+    - name: Create symlink for load balancer config in /etc/nginx/sites-enabled
       file:
         src: /etc/nginx/sites-available/nginx.conf
-        dest: /etc/nginx/sites-enabled/default:1
+        dest: /etc/nginx/sites-enabled/nginx.conf
         state: link
-      
-    - name: Restart nginx to apply changes
-      # TODO
-      service:
+      notify: Reload Nginx
+      become: yes
+
+    - name: Reload Nginx to apply changes
+      service: 
         name: nginx
         state: restarted
 
-- name: Play - Install and configure Nginx as a LoadBalancer on localhost
-  hosts: load-balancer
-  become: yes
-  tasks:
-    - name: Update cache (for Debian/Ubuntu)
-      apt: update_cache=yes
-      when: ansible_os_family == "Debian"
-    - name: Install Nginx (for Debian/Ubuntu)
-      apt:
-        name: nginx
-        state: latest
-      when: ansible_os_family == "Debian"
-    - name: Ensure Nginx is started (for Debian/Ubuntu)
-      service:
-        name: nginx
-        state: started
-      when: ansible_os_family == "Debian"
-    - name: Copy the Nginx config file to /etc/nginx/nginx.conf
-      copy:
-        src: ./nginx.conf
-        dest: /etc/nginx/nginx.conf
-      notify: restart nginx
-  handlers:
-    - name: restart nginx
-      service:
-        name: nginx
-        state: restarted
+
+
+
+# - name: Play - Install and configure Nginx as a LoadBalancer
+#   hosts: localhost
+#   become: yes
+#   tasks:
+#     - name: Update cache
+#       apt: update_cache=yes   
+#     - name: Install Nginx
+#       apt:
+#         name: nginx
+#         state: latest
+#     - name: Start Nginx
+#       service:
+#         name: nginx
+#         state: started        
+#     - name: Copy the Nginx config file to /etc/nginx/sites-available
+#       copy:
+#         src: ./nginx.conf
+#         dest: /etc/nginx/sites-available/nginx.conf
+      
+#     - name: Create symlink of the config file at /etc/nginx/sites-enabled
+#       # TODO
+#       file:
+#         src: /etc/nginx/sites-available/nginx.conf
+#         dest: /etc/nginx/sites-enabled/default:1
+#         state: link
+      
+#     - name: Restart nginx to apply changes
+#       # TODO
+#       service:
+#         name: nginx
+#         state: restarted
+
+# - name: Play - Install and configure Nginx as a LoadBalancer on localhost
+#   hosts: load-balancer
+#   become: yes
+#   tasks:
+#     - name: Update cache (for Debian/Ubuntu)
+#       apt: update_cache=yes
+#       when: ansible_os_family == "Debian"
+#     - name: Install Nginx (for Debian/Ubuntu)
+#       apt:
+#         name: nginx
+#         state: latest
+#       when: ansible_os_family == "Debian"
+#     - name: Ensure Nginx is started (for Debian/Ubuntu)
+#       service:
+#         name: nginx
+#         state: started
+#       when: ansible_os_family == "Debian"
+#     - name: Copy the Nginx config file to /etc/nginx/nginx.conf
+#       copy:
+#         src: ./nginx.conf
+#         dest: /etc/nginx/nginx.conf
+#       notify: restart nginx
+#   handlers:
+#     - name: restart nginx
+#       service:
+#         name: nginx
+#         state: restarted

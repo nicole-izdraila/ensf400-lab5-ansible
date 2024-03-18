@@ -39,13 +39,17 @@ services:
       - "2225:2225"
 
   nginx-load-balancer:
-    image: nginx:alpine
+    build:
+      context: Dockerloadbalancer
+    restart: unless-stopped
+    network_mode: "bridge"
     environment:
       - SSH_ENABLE_ROOT=true
     ports:
-      - "2226:22"
+      - "2226:2226"
     volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./secrets/id_rsa_container.pub:/root/.ssh/authorized_keys
+      # - ./nginx.conf:/etc/nginx/nginx.conf
     depends_on:
       - managedhost-app-1
       - managedhost-app-2
